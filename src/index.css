@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -7,82 +7,63 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 270 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 270 20% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 0 84% 60%;
+    --popover-foreground: 270 20% 10%;
+    --primary: 265 80% 60%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 10%;
+    --secondary: 265 20% 15%;
     --secondary-foreground: 0 0% 100%;
-
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-
-    --accent: 0 84% 60%;
+    --muted: 265 10% 92%;
+    --muted-foreground: 265 10% 45%;
+    --accent: 280 90% 65%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 0 0% 90%;
+    --border: 265 15% 85%;
     --input: 0 0% 100%;
-    --ring: 0 84% 60%;
-
-    --radius: 0.625rem;
-
+    --ring: 265 80% 60%;
+    --radius: 0.75rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 0 84% 60%;
+    --sidebar-primary: 265 80% 60%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 84% 60%;
+    --sidebar-accent: 265 80% 60%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 0 84% 60%;
+    --sidebar-ring: 265 80% 60%;
   }
 
   .dark {
-    --background: 0 0% 3%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 5%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 5%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 84% 60%;
+    --background: 265 25% 5%;
+    --foreground: 0 0% 95%;
+    --card: 265 20% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 265 20% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 265 80% 65%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 65%;
-
-    --accent: 0 84% 60%;
+    --secondary: 265 15% 12%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 265 15% 12%;
+    --muted-foreground: 265 10% 65%;
+    --accent: 280 90% 70%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 15%;
-    --input: 0 0% 10%;
-    --ring: 0 84% 60%;
-
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 84% 60%;
+    --border: 265 15% 18%;
+    --input: 265 15% 12%;
+    --ring: 265 80% 65%;
+    --sidebar-background: 265 20% 7%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 265 80% 65%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 84% 60%;
+    --sidebar-accent: 265 15% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 265 15% 18%;
+    --sidebar-ring: 265 80% 65%;
   }
 }
 
@@ -90,11 +71,9 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
-
   html {
     scroll-behavior: smooth;
   }
@@ -102,46 +81,69 @@
 
 @layer components {
   .font-orbitron {
-    font-family: 'Play', sans-serif;
+    font-family: "Orbitron", sans-serif;
   }
-
   .font-geist {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
-
   .font-space-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
   }
-
   .font-display {
-    font-family: 'Play', sans-serif;
+    font-family: "Orbitron", sans-serif;
   }
 
   .fade-in {
     animation: fadeIn 0.8s ease-out forwards;
     opacity: 0;
   }
-
   .fade-in-subtitle {
     animation: fadeInSubtitle 1s ease-out forwards;
     opacity: 0;
   }
-
   .slide-up {
     animation: slideUp 0.8s ease-out forwards;
     opacity: 0;
     transform: translateY(30px);
   }
-
   .glow-border {
     position: relative;
     border: 1px solid transparent;
-    background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+    background:
+      linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
       linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
   }
-
   .pulse-button {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      hsl(265 80% 75%) 0%,
+      hsl(300 90% 80%) 25%,
+      hsl(220 80% 80%) 50%,
+      hsl(280 90% 75%) 75%,
+      hsl(265 80% 75%) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+  }
+  .glow-purple {
+    box-shadow:
+      0 0 30px hsl(265 80% 65% / 0.4),
+      0 0 60px hsl(265 80% 65% / 0.2);
+  }
+  .card-hover {
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px hsl(265 80% 65% / 0.25);
   }
 }
 
@@ -155,7 +157,6 @@
     transform: translateY(0);
   }
 }
-
 @keyframes fadeInSubtitle {
   from {
     opacity: 0;
@@ -166,18 +167,6 @@
     transform: translateY(0);
   }
 }
-
-@keyframes fadeInButton {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -188,7 +177,6 @@
     transform: translateY(0);
   }
 }
-
 @keyframes pulse {
   0%,
   100% {
@@ -198,7 +186,42 @@
     opacity: 0.8;
   }
 }
-
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+@keyframes orb-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 @keyframes bounce {
   0%,
   20%,

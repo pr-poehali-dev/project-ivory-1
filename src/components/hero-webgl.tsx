@@ -1,192 +1,315 @@
-import { Canvas, extend, useFrame } from "@react-three/fiber"
-import { useAspect, useTexture } from "@react-three/drei"
-import { useMemo, useRef, useState, useEffect } from "react"
-import * as THREE from "three"
+import { useState, useEffect, useRef } from "react"
+import { Button } from "@/components/ui/button"
+import Icon from "@/components/ui/icon"
 
-const TEXTUREMAP = { src: "https://i.postimg.cc/XYwvXN8D/img-4.png" }
-const DEPTHMAP = { src: "https://i.postimg.cc/2SHKQh2q/raw-4.webp" }
-
-extend(THREE as unknown as Record<string, unknown>)
-
-const WIDTH = 300
-const HEIGHT = 300
-
-const Scene = () => {
-  const [rawMap, depthMap] = useTexture([TEXTUREMAP.src, DEPTHMAP.src])
-  const meshRef = useRef<THREE.Mesh>(null)
-
-  const material = useMemo(() => {
-    const vertexShader = `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `
-
-    const fragmentShader = `
-      uniform sampler2D uTexture;
-      uniform sampler2D uDepthMap;
-      uniform vec2 uPointer;
-      uniform float uProgress;
-      uniform float uTime;
-      varying vec2 vUv;
-
-      // Simple noise function
-      float random(vec2 st) {
-        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-      }
-
-      float noise(vec2 st) {
-        vec2 i = floor(st);
-        vec2 f = fract(st);
-        float a = random(i);
-        float b = random(i + vec2(1.0, 0.0));
-        float c = random(i + vec2(0.0, 1.0));
-        float d = random(i + vec2(1.0, 1.0));
-        vec2 u = f * f * (3.0 - 2.0 * f);
-        return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-      }
-
-      void main() {
-        vec2 uv = vUv;
-
-        // Depth-based displacement
-        float depth = texture2D(uDepthMap, uv).r;
-        vec2 displacement = depth * uPointer * 0.01;
-        vec2 distortedUv = uv + displacement;
-
-        // Base texture
-        vec4 baseColor = texture2D(uTexture, distortedUv);
-
-        // Create scanning effect
-        float aspect = ${WIDTH}.0 / ${HEIGHT}.0;
-        vec2 tUv = vec2(uv.x * aspect, uv.y);
-        vec2 tiling = vec2(120.0);
-        vec2 tiledUv = mod(tUv * tiling, 2.0) - 1.0;
-
-        float brightness = noise(tUv * tiling * 0.5);
-        float dist = length(tiledUv);
-        float dot = smoothstep(0.5, 0.49, dist) * brightness;
-
-        // Flow effect based on progress
-        float flow = 1.0 - smoothstep(0.0, 0.02, abs(depth - uProgress));
-
-        // Red scanning overlay
-        vec3 mask = vec3(dot * flow * 10.0, 0.0, 0.0);
-
-        // Combine effects
-        vec3 final = baseColor.rgb + mask;
-
-        gl_FragColor = vec4(final, 1.0);
-      }
-    `
-
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        uTexture: { value: rawMap },
-        uDepthMap: { value: depthMap },
-        uPointer: { value: new THREE.Vector2(0, 0) },
-        uProgress: { value: 0 },
-        uTime: { value: 0 },
-      },
-      vertexShader,
-      fragmentShader,
-    })
-  }, [rawMap, depthMap])
-
-  const [w, h] = useAspect(WIDTH, HEIGHT)
-
-  useFrame(({ clock, pointer }) => {
-    if (material.uniforms) {
-      material.uniforms.uProgress.value = Math.sin(clock.getElapsedTime() * 0.5) * 0.5 + 0.5
-      material.uniforms.uPointer.value = pointer
-      material.uniforms.uTime.value = clock.getElapsedTime()
-    }
-  })
-
-  const scaleFactor = 0.3
-  return (
-    <mesh ref={meshRef} scale={[w * scaleFactor, h * scaleFactor, 1]} material={material}>
-      <planeGeometry />
-    </mesh>
-  )
+interface HeroProps {
+  onNavigate: (section: string) => void
 }
 
-export const Hero3DWebGL = () => {
-  const titleWords = "Synapse AI".split(" ")
-  const subtitle = "Нейроинтерфейсы нового поколения."
+export const Hero3DWebGL = ({ onNavigate }: HeroProps) => {
+  const titleWords = ["SUN", "VPN"]
+  const subtitle = "Свобода в сети. Безопасность в каждом байте."
   const [visibleWords, setVisibleWords] = useState(0)
   const [subtitleVisible, setSubtitleVisible] = useState(false)
-  const [delays, setDelays] = useState<number[]>([])
-  const [subtitleDelay, setSubtitleDelay] = useState(0)
-
-  useEffect(() => {
-    setDelays(titleWords.map(() => Math.random() * 0.07))
-    setSubtitleDelay(Math.random() * 0.1)
-  }, [titleWords.length])
+  const [buttonsVisible, setButtonsVisible] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animFrameRef = useRef<number>(0)
 
   useEffect(() => {
     if (visibleWords < titleWords.length) {
-      const timeout = setTimeout(() => setVisibleWords(visibleWords + 1), 600)
+      const timeout = setTimeout(() => setVisibleWords(visibleWords + 1), 500)
       return () => clearTimeout(timeout)
     } else {
-      const timeout = setTimeout(() => setSubtitleVisible(true), 800)
-      return () => clearTimeout(timeout)
+      const t1 = setTimeout(() => setSubtitleVisible(true), 600)
+      const t2 = setTimeout(() => setButtonsVisible(true), 1200)
+      return () => { clearTimeout(t1); clearTimeout(t2) }
     }
   }, [visibleWords, titleWords.length])
 
+  // WebGL particle canvas
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+    }
+    resize()
+    window.addEventListener("resize", resize)
+
+    const particles: {
+      x: number; y: number; vx: number; vy: number;
+      size: number; opacity: number; color: string; pulse: number
+    }[] = []
+
+    const colors = [
+      "rgba(168,85,247,", "rgba(139,92,246,", "rgba(196,181,253,",
+      "rgba(216,180,254,", "rgba(147,51,234,",
+    ]
+
+    for (let i = 0; i < 120; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        size: Math.random() * 2.5 + 0.5,
+        opacity: Math.random() * 0.6 + 0.2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        pulse: Math.random() * Math.PI * 2,
+      })
+    }
+
+    let mouseX = canvas.width / 2
+    let mouseY = canvas.height / 2
+    const handleMouse = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      mouseX = e.clientX - rect.left
+      mouseY = e.clientY - rect.top
+    }
+    canvas.addEventListener("mousemove", handleMouse)
+
+    let t = 0
+    const draw = () => {
+      t += 0.005
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // Background gradient
+      const grad = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, 0,
+        canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+      )
+      grad.addColorStop(0, "rgba(88,28,220,0.12)")
+      grad.addColorStop(0.5, "rgba(60,10,120,0.08)")
+      grad.addColorStop(1, "rgba(10,4,30,0)")
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Orb glow
+      const orbGrad = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height * 0.5, 0,
+        canvas.width / 2, canvas.height * 0.5, 280
+      )
+      const orbPulse = Math.sin(t * 0.8) * 0.15 + 0.35
+      orbGrad.addColorStop(0, `rgba(168,85,247,${orbPulse})`)
+      orbGrad.addColorStop(0.4, `rgba(139,92,246,${orbPulse * 0.4})`)
+      orbGrad.addColorStop(1, "rgba(0,0,0,0)")
+      ctx.fillStyle = orbGrad
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Mouse reactive orb
+      const mGrad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 180)
+      mGrad.addColorStop(0, "rgba(196,181,253,0.12)")
+      mGrad.addColorStop(1, "rgba(0,0,0,0)")
+      ctx.fillStyle = mGrad
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Grid lines
+      ctx.strokeStyle = "rgba(168,85,247,0.04)"
+      ctx.lineWidth = 1
+      const spacing = 60
+      for (let x = 0; x < canvas.width; x += spacing) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, canvas.height)
+        ctx.stroke()
+      }
+      for (let y = 0; y < canvas.height; y += spacing) {
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(canvas.width, y)
+        ctx.stroke()
+      }
+
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x
+          const dy = particles[i].y - particles[j].y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < 100) {
+            ctx.beginPath()
+            ctx.strokeStyle = `rgba(168,85,247,${(1 - dist / 100) * 0.15})`
+            ctx.lineWidth = 0.5
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+
+      // Draw particles
+      particles.forEach((p) => {
+        p.pulse += 0.02
+        const sz = p.size + Math.sin(p.pulse) * 0.5
+        const op = p.opacity + Math.sin(p.pulse * 1.3) * 0.15
+
+        // Mouse attraction
+        const dx = mouseX - p.x
+        const dy = mouseY - p.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist < 200) {
+          p.vx += (dx / dist) * 0.015
+          p.vy += (dy / dist) * 0.015
+        }
+
+        p.vx *= 0.99
+        p.vy *= 0.99
+        p.x += p.vx
+        p.y += p.vy
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, sz, 0, Math.PI * 2)
+        ctx.fillStyle = `${p.color}${Math.min(op, 1)})`
+        ctx.fill()
+
+        // Glow
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, sz * 2.5, 0, Math.PI * 2)
+        ctx.fillStyle = `${p.color}${Math.min(op * 0.15, 0.15)})`
+        ctx.fill()
+      })
+
+      animFrameRef.current = requestAnimationFrame(draw)
+    }
+
+    draw()
+
+    return () => {
+      window.removeEventListener("resize", resize)
+      canvas.removeEventListener("mousemove", handleMouse)
+      cancelAnimationFrame(animFrameRef.current)
+    }
+  }, [])
+
   return (
-    <div className="h-screen bg-black relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none z-10">
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
-        <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-black to-transparent" />
-        <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-black to-transparent" />
+    <div id="home" className="min-h-screen relative overflow-hidden" style={{ background: "hsl(265 25% 5%)" }}>
+      {/* Particle canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+        style={{ zIndex: 1 }}
+      />
+
+      {/* Gradient overlays */}
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2 }}>
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[hsl(265_25%_5%)] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[hsl(265_25%_5%)] to-transparent" />
       </div>
 
-      <div className="h-screen uppercase items-center w-full absolute z-[60] pointer-events-none px-10 flex justify-center flex-col">
-        <div className="text-3xl md:text-5xl xl:text-6xl 2xl:text-7xl font-extrabold font-orbitron">
-          <div className="flex space-x-2 lg:space-x-6 overflow-hidden text-white">
-            {titleWords.map((word, index) => (
-              <div
-                key={index}
-                className={index < visibleWords ? "fade-in" : ""}
-                style={{
-                  animationDelay: `${index * 0.13 + (delays[index] || 0)}s`,
-                  opacity: index < visibleWords ? undefined : 0,
-                }}
-              >
-                {word}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="text-xs md:text-xl xl:text-2xl 2xl:text-3xl mt-2 overflow-hidden text-white font-bold max-w-4xl mx-auto text-center px-4">
-          <div
-            className={subtitleVisible ? "fade-in-subtitle" : ""}
-            style={{
-              animationDelay: `${titleWords.length * 0.13 + 0.2 + subtitleDelay}s`,
-              opacity: subtitleVisible ? undefined : 0,
-            }}
-          >
-            {subtitle}
-          </div>
-        </div>
-      </div>
-
-      <Canvas
-        flat
-        gl={{
-          antialias: true,
-          alpha: false,
-          powerPreference: "high-performance",
-        }}
-        camera={{ position: [0, 0, 1] }}
-        style={{ background: "#000000" }}
+      {/* Content */}
+      <div
+        className="relative flex flex-col items-center justify-center min-h-screen text-center px-6 pt-16"
+        style={{ zIndex: 10 }}
       >
-        <Scene />
-      </Canvas>
+        {/* Logo */}
+        <div
+          className="mb-8 fade-in"
+          style={{ animationDelay: "0.1s" }}
+        >
+          <img
+            src="https://cdn.poehali.dev/files/13335a1a-9b0e-43bc-b9fa-1b3eb3a84430.png"
+            alt="SUNVPN"
+            className="w-28 h-28 rounded-3xl mx-auto"
+            style={{
+              boxShadow: "0 0 60px rgba(168,85,247,0.5), 0 0 120px rgba(139,92,246,0.3)",
+              animation: "float 4s ease-in-out infinite",
+            }}
+          />
+        </div>
+
+        {/* Title */}
+        <div className="flex items-center gap-4 mb-4">
+          {titleWords.map((word, index) => (
+            <div
+              key={index}
+              className={`font-orbitron text-6xl md:text-8xl xl:text-9xl font-black ${index < visibleWords ? "fade-in" : ""}`}
+              style={{
+                animationDelay: `${index * 0.2}s`,
+                opacity: index < visibleWords ? undefined : 0,
+                background: index === 0
+                  ? "linear-gradient(135deg, #e9d5ff 0%, #a855f7 40%, #7c3aed 100%)"
+                  : "linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 50%, #6d28d9 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                filter: "drop-shadow(0 0 30px rgba(168,85,247,0.6))",
+              }}
+            >
+              {word}
+            </div>
+          ))}
+        </div>
+
+        {/* Subtitle */}
+        <div
+          className={`text-lg md:text-2xl text-purple-200/80 font-geist font-medium max-w-2xl leading-relaxed mb-3 ${subtitleVisible ? "fade-in-subtitle" : ""}`}
+          style={{ opacity: subtitleVisible ? undefined : 0 }}
+        >
+          {subtitle}
+        </div>
+
+        <div
+          className={`text-sm md:text-base text-purple-300/50 font-space-mono mb-12 ${subtitleVisible ? "fade-in-subtitle" : ""}`}
+          style={{ opacity: subtitleVisible ? undefined : 0, animationDelay: "0.3s" }}
+        >
+          🌍 50+ серверов &nbsp;•&nbsp; 🔒 AES-256 шифрование &nbsp;•&nbsp; ⚡ Безлимитный трафик
+        </div>
+
+        {/* Buttons */}
+        <div
+          className={`flex flex-col sm:flex-row gap-4 items-center ${buttonsVisible ? "fade-in" : ""}`}
+          style={{ opacity: buttonsVisible ? undefined : 0 }}
+        >
+          <Button
+            size="lg"
+            onClick={() => onNavigate("services")}
+            className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white border-0 text-lg px-10 py-6 font-geist font-semibold rounded-2xl glow-purple transition-all duration-300 hover:scale-105"
+          >
+            <Icon name="Shield" size={20} className="mr-2" />
+            Выбрать тариф
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => onNavigate("news")}
+            className="border-purple-500/40 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400 bg-transparent text-lg px-10 py-6 font-geist rounded-2xl transition-all duration-300"
+          >
+            Узнать больше
+          </Button>
+        </div>
+
+        {/* Stats row */}
+        <div
+          className={`mt-16 grid grid-cols-3 gap-8 max-w-lg ${buttonsVisible ? "fade-in" : ""}`}
+          style={{ opacity: buttonsVisible ? undefined : 0, animationDelay: "0.4s" }}
+        >
+          {[
+            { val: "50+", label: "Серверов" },
+            { val: "10K+", label: "Пользователей" },
+            { val: "99.9%", label: "Uptime" },
+          ].map((s, i) => (
+            <div key={i} className="text-center">
+              <div className="font-orbitron text-2xl font-bold shimmer-text">{s.val}</div>
+              <div className="text-sm text-purple-300/60 font-geist mt-1">{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Scroll indicator */}
+        <div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          style={{ animation: "bounce 2s infinite", zIndex: 10 }}
+        >
+          <Icon name="ChevronDown" size={24} className="text-purple-400/50" />
+        </div>
+      </div>
     </div>
   )
 }
