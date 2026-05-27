@@ -30,7 +30,7 @@ export function ProfileSection({ user, onNavigate }: ProfileSectionProps) {
     const load = async () => {
       try {
         const token = localStorage.getItem("sunvpn_token")
-        const res = await fetch("/api/profile/subscription", {
+        const res = await fetch("https://functions.poehali.dev/9594c5bf-d1b9-4221-ba4f-29f17cf7edc8", {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (res.ok) {

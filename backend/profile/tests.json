@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "Subscription - no token",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401
+    }
+  ]
+}

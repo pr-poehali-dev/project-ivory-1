@@ -25,15 +25,16 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
     setError("")
 
     try {
-      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register"
-      const body = mode === "login"
+      const AUTH_URL = "https://functions.poehali.dev/272e69a6-8256-4b7f-a305-df28788ea5eb"
+      const path = mode === "login" ? "/login" : "/register"
+      const bodyData = mode === "login"
         ? { email, password }
         : { email, password, username }
 
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${AUTH_URL}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(bodyData),
       })
 
       const data = await res.json()

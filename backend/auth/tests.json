@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "Register - missing fields",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "register", "email": "", "password": "", "username": ""},
+      "expectedStatus": 400
+    },
+    {
+      "name": "Login - no credentials",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "login", "email": "", "password": ""},
+      "expectedStatus": 400
+    }
+  ]
+}

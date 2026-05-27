@@ -11,7 +11,7 @@ interface NewsItem {
   author: string
 }
 
-const FUNC_URL = "/api/news"
+const FUNC_URL = "https://functions.poehali.dev/1eaf8f8d-605e-474c-9729-58c8c3b9c14b"
 
 const mockNews: NewsItem[] = [
   {
